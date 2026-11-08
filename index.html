@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d111c">
+<title>LoCal LoL</title>
+<style>
+:root{--bg:#0d111c;--panel:#171d2e;--panel2:#1e2640;--accent:#ff9a1f;--good:#3ddc84;--bad:#ff5252;--mut:#9aa6c4}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:#fff;font-family:system-ui,"Segoe UI",Tahoma,Arial,sans-serif;overflow:hidden;touch-action:manipulation}
+button,input,select{font:inherit;color:inherit}
+button{background:#26304a;border:0;border-radius:10px;padding:10px 14px;min-height:44px;cursor:pointer}
+button:hover{background:#34416a} button:disabled{opacity:.45;cursor:default}
+button.acc{background:var(--accent);color:#000;font-weight:700} button.acc:hover{background:#ffb04d}
+button.sm{min-height:34px;padding:4px 10px}
+input,select{background:#0f1424;border:1px solid #2a3556;border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
+select{width:auto}
+h2,h3{margin:0 0 8px;color:var(--accent)}
+.screen{position:fixed;inset:0;display:none;overflow:auto}
+.panel{background:var(--panel);border-radius:14px;padding:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:10px}
+.mut{color:var(--mut)} .err{color:var(--bad)} .ok{color:var(--good)}
+.grow{flex:1;min-width:0}
+/* login */
+#login{align-items:center;justify-content:center;padding:16px}
+#login .card{width:min(440px,100%)}
+#login h1{text-align:center;font-size:48px;margin:0;color:var(--accent)}
+/* hub */
+#hub{padding:calc(10px + env(safe-area-inset-top)) 10px 10px}
+#hub .wrap{display:flex;flex-direction:column;gap:10px;min-height:100%}
+.top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.top b{color:var(--accent);font-size:22px}
+.coins{color:#ffd24a;font-weight:700}
+.tabs{display:flex;gap:6px;overflow-x:auto}
+.tabs button{white-space:nowrap}
+.tabs button.on{background:var(--accent);color:#000;font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+.team{border:2px solid;border-radius:12px;padding:10px;min-height:90px}
+.item{display:flex;gap:8px;align-items:center;padding:8px;border-radius:10px;background:#0f1424;margin-bottom:6px}
+.item.sel{outline:2px solid var(--accent)}
+.preview{height:min(52vh,460px);min-height:260px;background:radial-gradient(circle at 50% 40%,#232c48,#0f1424);border-radius:14px;overflow:hidden}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button.on{outline:2px solid var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:14px} td,th{padding:5px 6px;text-align:start;border-bottom:1px solid #26304a}
+/* game */
+#gameHost{position:fixed;inset:0;display:none;background:#000}
+#gameHost canvas{display:block;width:100%;height:100%}
+#hud{position:fixed;inset:0;display:none;pointer-events:none;font-weight:700;text-shadow:0 0 6px #000,0 0 3px #000}
+#hud *{user-select:none;-webkit-user-select:none}
+#hudTop{position:absolute;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);font-size:24px;direction:ltr;white-space:nowrap}
+#hpBox{position:absolute;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));width:min(320px,40vw);direction:ltr}
+#hpBar{height:20px;background:rgba(0,0,0,.55);border-radius:6px;overflow:hidden;margin-top:4px}
+#hpFill{height:100%;background:var(--good);width:100%}
+#bossBar{position:absolute;top:48px;left:50%;transform:translateX(-50%);width:min(560px,70vw);display:none;direction:ltr;text-align:center}
+#bossFill{height:16px;background:#c0392b;border-radius:6px}
+#bossBar .bg{background:rgba(0,0,0,.55);border-radius:6px;overflow:hidden}
+#feed{position:absolute;top:calc(8px + env(safe-area-inset-top));right:12px;text-align:right;font-size:15px;direction:ltr}
+#crosshair{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%)}
+#crosshair:before,#crosshair:after{content:"";position:absolute;background:#fff;box-shadow:0 0 3px #000}
+#crosshair:before{left:10px;top:0;width:2px;height:22px} #crosshair:after{top:10px;left:0;height:2px;width:22px}
+#hitMark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:34px;opacity:0}
+#centerMsg{position:absolute;left:50%;top:62%;transform:translateX(-50%);font-size:34px}
+#board{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.65);padding:14px 24px;border-radius:12px;display:none;font-size:18px}
+#tipText{position:absolute;right:10px;bottom:6px;font-size:13px;color:#cfd6ea;font-weight:400}
+#dmgFlash{position:absolute;inset:0;background:#f00;opacity:0}
+#touchLayer{position:absolute;inset:0;display:none;pointer-events:auto;touch-action:none}
+#joyBase{position:absolute;left:30px;bottom:30px;width:140px;height:140px;border-radius:50%;border:3px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08)}
+#joyBase.on{background:rgba(255,255,255,.14)}
+#joyKnob{position:absolute;left:47px;top:47px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.35)}
+.tbtn{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;border:3px solid rgba(255,255,255,.55)}
+#btnFire{right:calc(28px + env(safe-area-inset-right));bottom:calc(34px + env(safe-area-inset-bottom));width:100px;height:100px;background:rgba(255,60,50,.4)}
+#btnJump{right:calc(150px + env(safe-area-inset-right));bottom:calc(26px + env(safe-area-inset-bottom));width:74px;height:74px;background:rgba(70,160,255,.4)}
+#btnPause{left:12px;top:calc(8px + env(safe-area-inset-top));width:42px;height:42px;font-size:18px;background:rgba(0,0,0,.4);border-width:2px}
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);pointer-events:auto}
+.overlay .panel{min-width:260px;text-align:center;display:flex;flex-direction:column;gap:12px}
+#resultText{font-size:30px;color:var(--accent);line-height:1.5}
+#rotateHint{display:none;position:fixed;inset:0;z-index:50;background:#000c;align-items:center;justify-content:center;font-size:24px;text-align:center;padding:20px}
+body.ingame.touch #rotateHint{display:none}
+@media (orientation:portrait){body.ingame.touch #rotateHint{display:flex}}
+body.touch #hpBox{left:62px;top:calc(10px + env(safe-area-inset-top));bottom:auto;width:min(240px,32vw)}
+body.touch #hudTop{font-size:20px}
+</style>
+</head>
+<body>
+
+<div id="login" class="screen">
+  <div class="panel card col">
+    <h1>LoCal LoL</h1>
+    <div class="mut" style="text-align:center">ساحة المعركة مع أصحابك</div>
+    <input id="lgUser" placeholder="اليوزر (إنجليزي)" autocapitalize="off" autocomplete="username" dir="ltr">
+    <input id="lgPass" type="password" placeholder="كلمة السر" autocomplete="current-password" dir="ltr">
+    <input id="lgName" placeholder="الاسم داخل اللعبة (للحساب الجديد)">
+    <div class="row"><button class="acc grow" id="btnLogin">دخول</button><button class="grow" id="btnReg">حساب جديد</button></div>
+    <div id="lgMsg" class="err"></div>
+  </div>
+</div>
+
+<div id="hub" class="screen">
+  <div class="wrap">
+    <div class="panel top">
+      <b>LoCal LoL</b>
+      <span id="tbName"></span><span id="tbLevel" class="mut"></span><span id="tbCoins" class="coins"></span>
+      <span class="grow"></span>
+      <span class="mut">جودة</span>
+      <select id="qSel"><option value="low">خفيفة</option><option value="med">متوسطة</option><option value="high">عالية</option></select>
+      <button class="sm" id="btnFull">ملء الشاشة</button>
+      <button class="sm" id="btnOut">خروج</button>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div id="tabBody" class="grow"></div>
+  </div>
+</div>
+
+<div id="gameHost"></div>
+<div id="hud">
+  <div id="dmgFlash"></div>
+  <div id="hudTop"></div>
+  <div id="bossBar"><div id="bossName"></div><div class="bg"><div id="bossFill"></div></div></div>
+  <div id="feed"></div>
+  <div id="crosshair"></div><div id="hitMark">✕</div>
+  <div id="hpBox"><div id="hpText"></div><div id="hpBar"><div id="hpFill"></div></div></div>
+  <div id="centerMsg"></div>
+  <div id="board"></div>
+  <div id="tipText">WASD حركة • ماوس تصويب • كليك: ضرب • Shift جري • Space نط • Tab نتيجة • Esc قائمة</div>
+  <div id="touchLayer">
+    <div id="joyBase"><div id="joyKnob"></div></div>
+    <div class="tbtn" id="btnFire" data-btn="fire">✚</div>
+    <div class="tbtn" id="btnJump" data-btn="jump">⬆</div>
+    <div class="tbtn" id="btnPause" data-btn="pause">❚❚</div>
+  </div>
+  <div class="overlay" id="pauseMenu"><div class="panel"><h2>متوقف</h2><button class="acc" id="btnResume">كمّل</button><button id="btnLeaveMatch">اخرج من الماتش والغرفة</button></div></div>
+  <div class="overlay" id="resultBox"><div class="panel"><div id="resultText"></div><button class="acc" id="btnBack">رجوع للقائمة</button></div></div>
+</div>
+<div id="rotateHint">لف الموبايل أفقي عشان تلعب 📱↔️</div>
+
+<script>
+(function loadThree(){
+  var urls=["three.min.js","https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js","https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js","https://unpkg.com/three@0.128.0/build/three.min.js"];
+  var i=0;
+  function next(){ if(window.THREE||i>=urls.length) return; var s=document.createElement("script"); s.src=urls[i++]; s.onload=boot; s.onerror=next; document.head.appendChild(s); }
+  function boot(){
+    var files=["catalog.js","net.js","character.js","match.js","ui.js"], k=0;
+    (function ld(){ if(k>=files.length) return; var s=document.createElement("script"); s.src=files[k++]+"?v=1"; s.onload=ld; document.body.appendChild(s); })();
+  }
+  next();
+  setTimeout(function(){ if(!window.THREE) document.body.insertAdjacentHTML("afterbegin","<div style='position:fixed;top:0;left:0;right:0;padding:10px;background:#a00;z-index:99'>مقدرتش أحمّل مكتبة Three.js - تأكد إن الفون عليه إنترنت</div>"); },8000);
+})();
+</script>
+</body>
+</html>
