@@ -1,0 +1,8 @@
+{
+  "name": "local-lol",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LoCal LoL - accounts server + browser game",
+  "scripts": { "start": "node backend/server.js" },
+  "engines": { "node": ">=18" }
+}
